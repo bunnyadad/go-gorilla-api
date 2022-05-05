@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"os"
 
+	app "go-gorilla-api/app/utils"
 	"go-gorilla-api/db"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -42,9 +44,37 @@ func (a *App) Initialize() {
 	d.Initialize(db_user, db_pass, db_host, db_name)
 
 	a.Router = mux.NewRouter()
+	a.initializeUserRoutes()
 }
 
 func (a *App) Run(addr string) {
 	log.Printf("Server listening on port: %s", addr)
 	log.Fatal(http.ListenAndServe(addr, a.Router))
+}
+
+func (a *App) isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header["Token"] != nil {
+			if len(r.Header["Token"][0]) < 1 {
+				app.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			} else {
+				token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
+					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+						app.RespondWithError(w, http.StatusInternalServerError, "There was error with signing the token.")
+					}
+					return mySigningKey, nil
+				})
+
+				if err != nil {
+					app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+					return
+				}
+				if token.Valid {
+					endpoint(w, r)
+				}
+			}
+		} else {
+			app.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		}
+	})
 }
