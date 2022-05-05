@@ -45,3 +45,14 @@ func (u *User) GetUser(db *sql.DB) error {
 	return db.QueryRow("SELECT username, password, createdat, updatedat FROM users WHERE id=$1",
 		u.ID).Scan(&u.Username, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
+
+func (u *User) CreateUser(db *sql.DB) error {
+	timestamp := time.Now()
+	err := db.QueryRow(
+		"INSERT INTO users(username, password, createdat, updatedat) VALUES($1, $2, $3, $4) RETURNING id, username, password, createdat, updatedat", u.Username, u.Password, timestamp, timestamp).Scan(&u.ID, &u.Username, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

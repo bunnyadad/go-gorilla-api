@@ -23,6 +23,7 @@ func (a *App) initializeUserRoutes() {
 	a.Router.Handle("/users", a.isAuthorized(a.getUsers)).Methods("GET")
 	a.Router.Handle("/user/username:{username}", a.isAuthorized(a.getUserByUserName)).Methods("GET")
 	a.Router.Handle("/user/id:{id}", a.isAuthorized(a.getUser)).Methods("GET")
+	a.Router.HandleFunc("/user", a.createUser).Methods("POST")
 
 }
 
@@ -85,4 +86,23 @@ func (a *App) getUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.RespondWithJSON(w, http.StatusOK, u)
+}
+
+func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
+	var u model.User
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&u); err != nil {
+		app.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		log.Println(err.Error())
+		return
+	}
+
+	defer r.Body.Close()
+
+	if err := u.CreateUser(d.Database); err != nil {
+		app.RespondWithError(w, http.StatusInternalServerError, "")
+		log.Println(err.Error())
+		return
+	}
+	app.RespondWithJSON(w, http.StatusCreated, u)
 }
