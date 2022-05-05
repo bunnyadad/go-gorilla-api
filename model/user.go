@@ -40,3 +40,8 @@ func (u *User) GetUserByUserName(db *sql.DB) error {
 	return db.QueryRow("SELECT id FROM users WHERE username=$1",
 		u.Username).Scan(&u.ID)
 }
+
+func (u *User) GetUser(db *sql.DB) error {
+	return db.QueryRow("SELECT username, password, createdat, updatedat FROM users WHERE id=$1",
+		u.ID).Scan(&u.Username, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+}

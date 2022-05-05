@@ -22,6 +22,8 @@ func (a *App) UserInitialize() {
 func (a *App) initializeUserRoutes() {
 	a.Router.Handle("/users", a.isAuthorized(a.getUsers)).Methods("GET")
 	a.Router.Handle("/user/username:{username}", a.isAuthorized(a.getUserByUserName)).Methods("GET")
+	a.Router.Handle("/user/id:{id}", a.isAuthorized(a.getUser)).Methods("GET")
+
 }
 
 func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +51,29 @@ func (a *App) getUserByUserName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	u := model.User{Username: vars["username"]}
 	if err := u.GetUserByUserName(d.Database); err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			app.RespondWithError(w, http.StatusNotFound, "User not found")
+			log.Println(err.Error())
+		default:
+			app.RespondWithError(w, http.StatusInternalServerError, "")
+			log.Println(err.Error())
+		}
+		return
+	}
+	app.RespondWithJSON(w, http.StatusOK, u)
+}
+
+func (a *App) getUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		app.RespondWithError(w, http.StatusInternalServerError, "Invalid request")
+		log.Println(err.Error())
+	}
+
+	u := model.User{ID: id}
+	if err := u.GetUser(d.Database); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			app.RespondWithError(w, http.StatusNotFound, "User not found")
