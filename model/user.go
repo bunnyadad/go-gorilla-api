@@ -67,3 +67,11 @@ func (u *User) DeleteUser(db *sql.DB) error {
 
 	return err
 }
+
+func (u *User) UpdateUser(db *sql.DB) error {
+	timestamp := time.Now()
+	_, err :=
+		db.Exec("UPDATE users SET username=$1, password=$2, updatedat=$3 WHERE id=$4 RETURNING id, username, password, createdat, updatedat", u.Username, u.Password, timestamp, u.ID)
+
+	return err
+}
