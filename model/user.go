@@ -35,3 +35,8 @@ func GetUsers(db *sql.DB, start, count int) ([]User, error) {
 
 	return users, nil
 }
+
+func (u *User) GetUserByUserName(db *sql.DB) error {
+	return db.QueryRow("SELECT id FROM users WHERE username=$1",
+		u.Username).Scan(&u.ID)
+}

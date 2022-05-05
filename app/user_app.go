@@ -1,6 +1,9 @@
 package app
 
 import (
+	"database/sql"
+	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -8,6 +11,7 @@ import (
 
 	"go-gorilla-api/model"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
@@ -17,6 +21,7 @@ func (a *App) UserInitialize() {
 
 func (a *App) initializeUserRoutes() {
 	a.Router.Handle("/users", a.isAuthorized(a.getUsers)).Methods("GET")
+	a.Router.Handle("/user/username:{username}", a.isAuthorized(a.getUserByUserName)).Methods("GET")
 }
 
 func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
@@ -38,4 +43,21 @@ func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.RespondWithJSON(w, http.StatusOK, users)
+}
+
+func (a *App) getUserByUserName(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	u := model.User{Username: vars["username"]}
+	if err := u.GetUserByUserName(d.Database); err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			app.RespondWithError(w, http.StatusNotFound, "User not found")
+			log.Println(err.Error())
+		default:
+			app.RespondWithError(w, http.StatusInternalServerError, "")
+			log.Println(err.Error())
+		}
+		return
+	}
+	app.RespondWithJSON(w, http.StatusOK, u)
 }
