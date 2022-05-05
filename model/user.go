@@ -61,3 +61,9 @@ func (u *User) GetUserByUserNameAndPassword(db *sql.DB) error {
 	return db.QueryRow("SELECT id, username, password, createdat, updatedat FROM users WHERE username=$1 AND password=$2",
 		u.Username, u.Password).Scan(&u.ID, &u.Username, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
+
+func (u *User) DeleteUser(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM users WHERE id=$1", u.ID)
+
+	return err
+}

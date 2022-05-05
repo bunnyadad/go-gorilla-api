@@ -27,7 +27,7 @@ func (a *App) initializeUserRoutes() {
 	a.Router.Handle("/user/id:{id}", a.isAuthorized(a.getUser)).Methods("GET")
 	a.Router.HandleFunc("/user", a.createUser).Methods("POST")
 	a.Router.HandleFunc("/user/login", a.loginUser).Methods("POST")
-
+	a.Router.Handle("/user/id:{id}", a.isAuthorized(a.deleteUser)).Methods("DELETE")
 }
 
 func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +139,22 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 	app.RespondWithJSON(w, http.StatusOK, u)
 }
 
+func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		app.RespondWithError(w, http.StatusInternalServerError, "Invalid request")
+		log.Println(err.Error())
+	}
+
+	u := model.User{ID: id}
+	if err := u.DeleteUser(d.Database); err != nil {
+		app.RespondWithError(w, http.StatusInternalServerError, "")
+		log.Println(err.Error())
+		return
+	}
+	app.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "User deleted"})
+}
 
 // Helper function
 func GenerateJWT() (string, error) {
