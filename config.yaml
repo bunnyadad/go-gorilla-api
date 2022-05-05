@@ -1,1 +1,8 @@
 JWT_KEY: 'asdkvo2mkmnzaq2n=kf'
+
+APP_DB_USERNAME: 'ui_test'
+APP_DB_PASSWORD: 'ui_test'
+APP_DB_NAME: 'ui_test'
+APP_DB_HOST: '127.0.0.1:5432'
+
+PORT: '8080'
