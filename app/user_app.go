@@ -29,6 +29,7 @@ func (a *App) initializeUserRoutes() {
 	a.Router.HandleFunc("/user/login", a.loginUser).Methods("POST")
 	a.Router.Handle("/user/id:{id}", a.isAuthorized(a.deleteUser)).Methods("DELETE")
 	a.Router.Handle("/user/id:{id}", a.isAuthorized(a.updateUser)).Methods("PUT")
+	a.Router.Handle("/user/id:{id}/name ", a.isAuthorized(a.modifyUserName)).Methods("PATCH")
 }
 
 func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
@@ -157,6 +158,33 @@ func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "User deleted"})
+}
+
+func (a *App) modifyUserName(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		app.RespondWithError(w, http.StatusInternalServerError, "Invalid request")
+		log.Println(err.Error())
+	}
+
+	var u model.User
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&u); err != nil {
+		app.RespondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
+		log.Println(err.Error())
+		return
+	}
+
+	defer r.Body.Close()
+	u.ID = id
+
+	if err := u.ModifyUserName(d.Database); err != nil {
+		app.RespondWithError(w, http.StatusInternalServerError, "")
+		log.Println(err.Error())
+		return
+	}
+	app.RespondWithJSON(w, http.StatusOK, u)
 }
 
 func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {

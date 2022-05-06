@@ -80,3 +80,11 @@ func (u *User) UpdateUser(db *sql.DB) error {
 
 	return err
 }
+
+func (u *User) ModifyUserName(db *sql.DB) error {
+	timestamp := time.Now()
+	_, err :=
+		db.Exec("UPDATE users SET username=$1, updatedat=$2 WHERE id=$3 RETURNING id, username, password, createdat, updatedat", u.Username, timestamp, u.ID)
+
+	return err
+}
