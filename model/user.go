@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -13,10 +14,14 @@ type User struct {
 	UpdatedAt *time.Time `json:"updatedat,omitempty" sql:"updatedat"`
 }
 
-func GetUsers(db *sql.DB, start, count int) ([]User, error) {
-	rows, err := db.Query(
-		"SELECT id, username FROM users LIMIT $1 OFFSET $2",
-		count, start)
+func GetUsers(db *sql.DB, start, count int, sort, direction string) ([]User, error) {
+	var query string
+	if sort != "" {
+		query = fmt.Sprintf("SELECT id, username FROM users ORDER BY %s %s LIMIT %d OFFSET %d", sort, direction, count, start)
+	} else {
+		query = fmt.Sprintf("SELECT id, username FROM users LIMIT %d OFFSET %d", count, start)
+	}
+	rows, err := db.Query(query)
 
 	if err != nil {
 		return nil, err

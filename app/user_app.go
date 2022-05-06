@@ -34,6 +34,8 @@ func (a *App) initializeUserRoutes() {
 func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
 	count, _ := strconv.Atoi(r.FormValue("count"))
 	start, _ := strconv.Atoi(r.FormValue("start"))
+	sort := r.FormValue("sort")
+	direction := r.FormValue("direction")
 
 	if count > 10 || count < 1 {
 		count = 10
@@ -42,7 +44,7 @@ func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	users, err := model.GetUsers(d.Database, start, count)
+	users, err := model.GetUsers(d.Database, start, count, sort, direction)
 	if err != nil {
 		app.RespondWithError(w, http.StatusInternalServerError, "")
 		log.Println(err.Error())
