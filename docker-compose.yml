@@ -20,7 +20,7 @@ services:
     depends_on:
       - db
     ports:
-      - 8080:8080
+      - 443:443
     environment:
       ENV: prod
       DB_HOST: db
@@ -28,7 +28,7 @@ services:
       DB_USER: ui_test
       DB_PASSWORD: ui_test
       DB_NAME: ui_test
-      PORT: 8080:8080
+      PORT: 443:443
     links:
       - db
     volumes:

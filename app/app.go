@@ -9,6 +9,7 @@ import (
 	"go-gorilla-api/db"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -48,8 +49,18 @@ func (a *App) Initialize() {
 }
 
 func (a *App) Run(addr string) {
+	CSRF := csrf.Protect(
+		[]byte("251e70cd5d1a994c51fd316f7040f13d"),
+		// instruct the browser to never send cookies during cross site requests
+		csrf.SameSite(csrf.SameSiteStrictMode),
+		csrf.Secure(os.Getenv("ENV") == "prod"),
+	)
 	log.Printf("Server listening on port: %s", addr)
-	log.Fatal(http.ListenAndServe(addr, a.Router))
+	if os.Getenv("ENV") == "prod" {
+		log.Fatal(http.ListenAndServeTLS(addr, "tls.crt", "tls.key", CSRF(a.Router)))
+	} else {
+		log.Fatal(http.ListenAndServe(addr, CSRF(a.Router)))
+	}
 }
 
 func (a *App) isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {

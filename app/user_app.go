@@ -13,6 +13,7 @@ import (
 	"go-gorilla-api/model"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
@@ -23,6 +24,7 @@ func (a *App) UserInitialize() {
 
 func (a *App) initializeUserRoutes() {
 	a.Router.Handle("/users", a.isAuthorized(a.getUsers)).Methods("GET")
+	a.Router.HandleFunc("/getToken", a.getToken).Methods("GET")
 	a.Router.Handle("/user/username:{username}", a.isAuthorized(a.getUserByUserName)).Methods("GET")
 	a.Router.Handle("/user/id:{id}", a.isAuthorized(a.getUser)).Methods("GET")
 	a.Router.HandleFunc("/user", a.createUser).Methods("POST")
@@ -30,6 +32,11 @@ func (a *App) initializeUserRoutes() {
 	a.Router.Handle("/user/id:{id}", a.isAuthorized(a.deleteUser)).Methods("DELETE")
 	a.Router.Handle("/user/id:{id}", a.isAuthorized(a.updateUser)).Methods("PUT")
 	a.Router.Handle("/user/id:{id}/name ", a.isAuthorized(a.modifyUserName)).Methods("PATCH")
+}
+
+func (a *App) getToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-CSRF-Token", csrf.Token(r))
+	app.RespondWithJSON(w, http.StatusOK, nil)
 }
 
 func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
